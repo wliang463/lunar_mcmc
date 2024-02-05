@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Aug  3 23:14:25 2022
 
-@author: liang
+Code to demonstrate using the Markov chain Monte Carlo method
+on the lunar NE anomaly (Liang and Broquet IBC paper)
+
+@author: Weigang Liang
 """
 
 
-#tts: bottom depth, width, top depth, ellipse number
-#center row+1, center column+1, anomaly length, grav col1, 2, grav row1, 2,
-#anomaly number
+#example MCMC run for the NE anomaly
 
 import pyshtools
 
@@ -22,9 +22,6 @@ import sys
 start_time = time.time()
 
 import pandas as pd
-
-
-
 
 
 
@@ -53,14 +50,8 @@ def mcmc(iterations):
     gravv = np.mean(gravv0[:,grav_col1:grav_col2]*1e5,axis=1)
     gravv = gravv - min(gravv[grav_row1:grav_row2])
     
-    # if np.size(sys.argv) < 6:
-    #     #gravv = np.mean(gravv0[:,900:950]*1e5,axis=1)+14
-    # else:
-    #     #gravv = np.mean(gravv0[:,900:950]*1e5,axis=1)+int(sys.argv[5])
-    
-    #36,37,34
     G = 6.67408e-11;
-    drho = 400;#Hess, Parmentier 1995
+    drho = 400;#density contrast between mantle and IBC
  
     y = np.array((-ys/2,ys/2)); 
 
@@ -128,19 +119,12 @@ def mcmc(iterations):
     def likelihood(td,bd,xs,ys,gravv):#no bd
     
         grav_p0 = forward_grav(td,bd-td,xs,ys,100)
-        grav_p = np.mean(grav_p0[:,grav_col1:grav_col2]*1e5,axis=1)#900:950
-        #gravv is assumed already mean-ed
+        grav_p = np.mean(grav_p0[:,grav_col1:grav_col2]*1e5,axis=1)
          
-        #summ = np.mean(abs(gravv[grav_row1:grav_row2]+grav_p[grav_row1:grav_row2]))#484:523
         summ = (np.mean((gravv[grav_row1:grav_row2]+grav_p[grav_row1:grav_row2])**2))**0.5
         
         llh = np.exp(np.float64(-summ**2/297))
-        #np.sqrt(sum((p1-p2)**2)/501)*1e5*2; p1 and p2 are half of nnw's :,1620
-        
-        #modified for poor fits
-        
-        #llh = summ**-2/2
-     
+
         return llh, summ
         
     bar = 1e10
@@ -158,11 +142,6 @@ def mcmc(iterations):
     taperf[0,:,:] = taper
     taperf[1,:,:] = taper
     
-    # a = 500; b = -350
-    
-                
-    # import pdb 
-    # pdb.set_trace()
     xs = np.random.uniform(50e3,200e3)
     td = np.random.uniform(20e3,50e3)
     bd = np.random.uniform(td,100e3)
@@ -185,18 +164,13 @@ def mcmc(iterations):
     #MCMC algorithm
     
     for step in np.arange(total):
-        # if step%1000 == 0 and step//1000>0:
-        #     elapsed_time = time.time() - start_time
-        #     print(str(step) + ' interations, it has been ' + str(elapsed_time//3600)
-        #            + ' hr')
-        # llho, summ1 = likelihood(td, xs, far_bg, mtseff0)
+
         llho, summ1 = likelihood(td, bd, xs, ys, gravv)
         
         td1 = td+np.random.normal(0,1.5e3)
         bd1 = bd+np.random.normal(0,7e3)
         xs1 = xs+np.random.normal(0,7e3)
         llhn, summ2 = likelihood(td1, bd1, xs1, ys, gravv)
-        # llhn, summ2 = likelihood(td1, xs1, far_bg, mtseff0)
         
         judge = np.random.uniform(0, 1)
         
@@ -232,13 +206,6 @@ def mcmc(iterations):
                     print(judge)
             
     
-        
-       
-    # filename = 'dike_results_mcmc' + '_' + str(int(td)) + '_' + str(int(xs)) + '_' + str(int(bd)) + '_' + str(ano_num) + '.mat'
-    # filename2 = 'dike_results_mcmc' + '_' + str(int(td)) + '_' + str(int(xs)) + '_' + str(int(bd)) + '_' + str(ano_num) + '_bestfits.mat'
-    
-    # io.savemat(filename,{'bd_c':bd_c,'xs_c':xs_c,'td_c':td_c,'acc':acc,'rej':rej,'bars':bars})
-    # io.savemat(filename,{'xs_c':xs_c,'td_c':td_c,'acc':acc,'rej':rej})
     
     from math import log10, floor
     def r(x, sig=3):
@@ -265,9 +232,7 @@ def mcmc(iterations):
 
     rr1 = copy.deepcopy(thh1/xss)
     r_c1 = th_c1/xs_c
-    
-    # io.savemat(filename2,{'tdd':tdd,'xss':xss,'bdd':bdd,'thh':thh1,'rr':rr1})
-    
+        
     
     tda = np.mean(td_c)
     bda = np.mean(bd_c)
@@ -335,10 +300,6 @@ def mcmc(iterations):
             
         grav_p0 = forward_grav(td,bd-td,xs,ys,100)
         grav_p01 = np.mean(grav_p0[:,grav_col1:grav_col2]*1e5,axis=1)#900:950
-        # std_p01 = np.std(grav_p0[:,grav_col1:grav_col2]*1e5,axis=1)#900:950
-        #gravv is assumed already mean-ed
-         
-        # spec2 = grav_p[grav_row1:grav_row2];
         
         profs[jj,:] = grav_p01
     
