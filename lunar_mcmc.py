@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Aug  3 23:14:25 2022
+
+Code to perform the Markov chain Monte Carlo method using the 
+Metropolis-Hastings algorithm on GRAIL gravity data to constrain
+the dimensions of the IBC bodies beneath the lunar surface
 
 @author: Weigang Liang
 """
 
-#center row+1, center column+1, anomaly length, grav col1, 2, grav row1, 2,
-#anomaly number
 
 import pyshtools
 
@@ -68,7 +69,7 @@ for ii in np.array([2,3,4]):
     gravv = gravv - min(gravv[grav_row1:grav_row2])
     
     G = 6.67408e-11;
-    drho = 300;#density contrast between mantle and IBC
+    drho = 400;#density contrast between mantle and IBC
     
     y_cen = y_cen_0[numm]
     x_cen = x_cen_0[numm]
@@ -171,7 +172,7 @@ for ii in np.array([2,3,4]):
         bars = np.array([]);
     
         
-        total = 10000
+        total = 10000 #number of iterations
         
         acc = 0
         rej = 0
@@ -251,9 +252,7 @@ for ii in np.array([2,3,4]):
             siz = chain.shape[0]
             c_sort = np.sort(chain)
             return c_sort[round((siz-1)*0.84)]
-        
-        print(str(r(bar)))
-                
+                        
         
         thh1 = bdd-tdd
         th_c1 = bd_c-td_c
@@ -298,7 +297,7 @@ for ii in np.array([2,3,4]):
         
         num = jj+1
         
-        print('SHEET NUMMMMM AT ' + str(ano_num))
+        print('SHEET NUM AT ' + str(ano_num))
         s = wb.get_sheet(int(ii-2))
         s.write(num,1,td_state)
         s.write(num,2,bd_state)
